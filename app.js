@@ -10,7 +10,11 @@ app.get('/', (req, res) => {
     res.sendFile(__dirname + '/client/index.html');
 });
 app.use('/client', express.static(__dirname + '/client'));
-http.listen(2000);
+let port = process.env.PORT;
+if (port == null || port == "") {
+  port = 8000;
+}
+http.listen(port);
 // globals
 let socketList = [];
 let playerList = [];
