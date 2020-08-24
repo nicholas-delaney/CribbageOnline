@@ -12,9 +12,9 @@ app.get('/', (req, res) => {
 app.use('/client', express.static(__dirname + '/client'));
 let port = process.env.PORT;
 if (port == null || port == "") {
-  port = 8000;
+  port = 2000;
 }
-http.listen(port);
+app.listen(port);
 // globals
 let socketList = [];
 let playerList = [];
