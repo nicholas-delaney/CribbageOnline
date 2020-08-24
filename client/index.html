@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href='https://fonts.googleapis.com/css?family=Bangers' rel='stylesheet'>
+  <link href='https://fonts.googleapis.com/css?family=Epilogue' rel='stylesheet'>
+  <link rel="stylesheet" type="text/css" href="/client/cribStyle.css">
+</head>
+
+<body>
+  <h1 id="title"> CRIBBAGE ONLINE! </h1>
+  <div id="signDiv">
+    Username <input id="signDiv-username" type="text" placeholder="Enter username here"></input>
+    Password <input id="signDiv-password" type="password" placeholder="Enter password here"></input>
+    <div class="buttons">
+      <button id="signDiv-signIn" type="button"> Sign In </button>
+      <button id="signDiv-signUp" type="button"> Sign Up </button>
+    </div>
+  </div>
+
+  <canvas id="lobbyCanvas" width="1000" height="400" style="border:1px solid black; display:none;">
+  </canvas>
+
+  <canvas id="gameCanvas" width="1000" height="400" style="border:1px solid #000000; display:none;">
+  </canvas>
+
+  <div id="chatWrap" style="display:none;">
+    <div id="chatBox" style="width:1000px;height:150px;overflow-y:scroll;background-color:#1C2833">
+      <div>Chat log</div>
+    </div>
+    <form id="chatForm">
+      <input id="chatInput" type="text" style="width:500px"></input>
+    </form>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src='client/js/Environment.js'></script>
+  <script src='client/js/CribRL.js'></script>
+  <script src='client/js/Lobby.js'></script>
+  <script src='client/js/Gamestate.js'></script>
+  <script src='client/js/Assets.js'></script>
+  <script src='client/js/Profile.js'></script>
+
+  <script>
+    // globals
+    const socket = io();
+    const gameCanvas = document.getElementById("gameCanvas");
+    const lobbyCanvas = document.getElementById("lobbyCanvas");
+    let inLobby = false;
+    let viewProfile = false;
+    let game = null;
+    let assets = new Assets();
+    let inGame = false;
+    let playerList = [];
+    let lobbyList = [];
+    let lobby = new Lobby();
+    let socketId = -1;
+    let lockScroll = true;
+    let yourInfo = null;
+    let title = document.getElementById('title');
+
+    // chat js
+    let chatWrap = document.getElementById('chatWrap');
+    let chatText = document.getElementById('chatBox');
+    let chatInput = document.getElementById('chatInput');
+    let chatForm = document.getElementById('chatForm');
+    chatText.onmouseenter = () => {
+      lockScroll = false;
+    }
+    chatText.onmouseleave = () => {
+      lockScroll = true;
+    }
+    chatForm.onsubmit = function (e) {
+      e.preventDefault();
+      if (inLobby) {
+        socket.emit('sendMsg', {
+          name: yourInfo.username,
+          msg: chatInput.value
+        });
+      }
+      else {
+        socket.emit('gameMsg', {
+          p1: game.player1,
+          p2: game.player2,
+          name: yourInfo.username,
+          msg: chatInput.value
+        });
+      }
+      chatInput.value = "";
+    }
+    socket.on('addToChat', (data) => {
+      chatText.innerHTML += '<div>' + data.name + ': ' + data.msg + '</div>';
+    });
+    // sign-in / sign-up js
+    let signDiv = document.getElementById("signDiv");
+    let signDivUsername = document.getElementById("signDiv-username");
+    let signDivSignIn = document.getElementById("signDiv-signIn");
+    let signDivSignUp = document.getElementById("signDiv-signUp");
+    let signDivPassword = document.getElementById("signDiv-password");
+    signDivSignUp.onclick = () => {
+      socket.emit('signUp', {
+        username: signDivUsername.value,
+        password: signDivPassword.value
+      });
+    };
+    socket.on('signUpResponse', (data) => {
+      if (data.success) {
+        alert(data.msg);
+      }
+      else {
+        alert(data.msg);
+      }
+    });
+    signDivSignIn.onclick = () => {
+      socket.emit('signIn', {
+        username: signDivUsername.value,
+        password: signDivPassword.value,
+        id: socketId,
+      });
+    };
+    socket.on('signInResponse', (data) => {
+      if (data.success) {
+        yourInfo = data.you,
+          playerList = data.players;
+        signDiv.style.display = 'none';
+        title.style.display = 'none';
+        chatWrap.style.display = 'inline-block';
+        lobbyCanvas.style.display = 'inline-block';
+        inLobby = true;
+      }
+      else {
+        alert(data.msg);
+      }
+    });
+    // player info loop
+    socket.on('playersInfo', (data) => {
+      playerList = data.players;
+      lobbyList = [];
+      if (yourInfo) {
+        for (let i = 0; i < playerList.length; i++) {
+          if (playerList[i].inLobby && playerList[i].username !== yourInfo.username) {
+            lobbyList.push(playerList[i]);
+          }
+        }
+      }
+    });
+    socket.on('yourSocketInfo', (data) => {
+      socketId = data.id;
+    });
+    // show challenge from another player
+    socket.on('displayChallenge', (data) => {
+      lobby.displayChallenge(data.sender);
+    });
+    // start game with another player
+    socket.on('startGame', (data) => {
+      lobby.challengers = [];
+      lobby.selectedPlayer = null;
+      lobby.hoveredPlayer = null;
+      inLobby = false;
+      inGame = true;
+      socket.emit('inOutLobby', {
+        p1: data.p1,
+        p2: data.p2,
+        inLobby: false
+      });
+      game = new Gamestate(data.p1, data.p2);
+      gameCanvas.style.display = 'inline-block';
+      lobbyCanvas.style.display = 'none';
+    });
+
+    socket.on('handleGameOver', (data) => {
+      inLobby = true;
+      inGame = false;
+      socket.emit('inOutLobby', {
+        p1: data.winner,
+        p2: data.loser,
+        inLobby: true
+      });
+      gameCanvas.style.display = 'none';
+      lobbyCanvas.style.display = 'inline-block';
+      if (data.rsn === "disconnect") {
+        chatText.innerHTML += '<div>' + data.loser.username + ' has disconnected from the game. </div>';
+      }
+      else if (data.rsn === "forfeit") {
+        chatText.innerHTML += '<div>' + data.loser.username + ' has forfeited the game. </div>';
+      }
+      else {
+        chatText.innerHTML += '<div>' + data.winner.username + ' has beat ' + data.loser.username + '! </div>';
+      }
+    });
+    // main lobby / game loop
+    setInterval(() => {
+      if (lockScroll) {
+        chatText.scrollTop = chatText.scrollHeight - chatText.clientHeight;
+      }
+      if (inLobby) {
+        lobby.update();
+      }
+      else if (inGame) {
+        game.update();
+      }
+    }, 450);
+    // game info to share between players:
+    socket.on('sharedDeck', (data) => {
+      game.env.deck = data.deck;
+      game.shuffled = true;
+    });
+    socket.on('sharedInitCut', (data) => {
+      if (data.pNum < 2) {
+        game.env.p1Cut = data.card;
+      }
+      else {
+        game.env.p2Cut = data.card;
+      }
+    });
+    socket.on('sharedCrib', (data) => {
+      game.env.handleSharedCrib(data);
+    });
+    socket.on('sharedCut', (data) => {
+      game.env.handleCut(data.cut);
+    });
+    socket.on('handlePegResults', (data) => {
+      game.env.handlePegResults(data);
+    });
+    socket.on('handleGo', (data) => {
+      game.env.handleGo(data);
+    });
+    socket.on('handleProceed', (data) => {
+      if (data.n === 1) {
+        game.p1Pro = true;
+      }
+      else {
+        game.p2Pro = true;
+      }
+      if (game.p1Pro && game.p2Pro) {
+        game.env.cutCard = null;
+        game.p1Pro = false;
+        game.p2Pro = false;
+        game.gameStage = "deal";
+      }
+    });
+
+  </script>
+</body>
+
+</html>
