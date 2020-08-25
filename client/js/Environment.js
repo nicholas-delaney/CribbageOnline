@@ -431,7 +431,7 @@ class Environment {
 
     // get score for laying a card in the pegging round
     pegPoints(c) {
-        let name = (this.pTurn === 1) ? this.p1.username : (this.p2) ? this.p1.username : "Computer";
+        let name = (this.pTurn === 1) ? this.p1.username : (this.p2) ? this.p2.username : "Computer";
         let msg = [];
         c.owner = this.pTurn;
         this.allPegCards.push(c);
