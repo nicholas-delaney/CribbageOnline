@@ -250,7 +250,7 @@ class Gamestate {
         else if (this.gameStage === "discard2") {
             // wait for both players to discard 2 
             if (this.env.getCrib().length === 4) {
-                let name = (this.env.dealer === 2) ? this.player1.username : (this.player2) ? this.player1.username : "Computer";
+                let name = (this.env.dealer === 2) ? this.player1.username : (this.player2) ? this.player2.username : "Computer";
                 chatText.innerHTML += '<div> Both players have discared two cards to the crib, ' + name + 's turn to cut the deck! </div>';
                 this.gameStage = "getCut";
                 this.chosenCard = [];

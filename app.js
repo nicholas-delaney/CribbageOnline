@@ -22,7 +22,7 @@ let you = null;
 // on socket connection
 const io = require('socket.io')(http); // (http)
 io.sockets.on('connection', (socket) => {
-
+    
     socketList.push(socket);
     socket.emit('yourSocketInfo', {
         id: socket.id,

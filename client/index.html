@@ -201,7 +201,7 @@
       else if (inGame) {
         game.update();
       }
-    }, 450);
+    }, 650);
     // game info to share between players:
     socket.on('sharedDeck', (data) => {
       game.env.deck = data.deck;

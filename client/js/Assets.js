@@ -16,7 +16,7 @@ class Assets {
         this.backgrounds.cribBoard = new Image();
         this.backgrounds.cribBoard.src = 'client/assets/cribBoardBg.jpg';
         this.backOfCard = new Image();
-        this.backOfCard.src = 'client/assets/backofCard.jpg';
+        this.backOfCard.src = 'client/assets/backOfCard.jpg';
         this.cHeight = 153;
         this.cWidth = 98.5;
     }
