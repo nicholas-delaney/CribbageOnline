@@ -366,7 +366,7 @@ class Gamestate {
             }
         });
         // check if clicking something important
-        gameCanvas.addEventListener('mouseup', (e) => {
+        gameCanvas.addEventListener('mousedown', (e) => {
             if (!this.click.clicking) {
                 this.click.clicking = true;
                 this.click.start = new Date().getTime();
@@ -502,9 +502,9 @@ class Gamestate {
         this.ctx.fillText(this.go.text, this.go.pos.x + 40, this.go.pos.y + 28);
         // draw procceed button
         if (this.gameStage === "count") {
-            this.ctx.fillStyle = (this.hPro) ? "black" : "blue";
+            this.ctx.fillStyle = (this.hPro) ? "white" : "blue";
             this.ctx.fillRect(this.proceed.pos.x, this.proceed.pos.y, this.proceed.size.x, this.proceed.size.y);
-            this.ctx.fillStyle = (this.hPro) ? "blue" : "black";
+            this.ctx.fillStyle = (this.hPro) ? "blue" : "white";
             this.ctx.fillText(this.proceed.text, this.proceed.pos.x + 16, this.proceed.pos.y + 29);
         }
         // draw leave/forfeit button
@@ -550,7 +550,7 @@ class Gamestate {
             this.ctx.fillStyle = "orange";
             this.ctx.fillRect(this.pegScore.pos.x, this.pegScore.pos.y, this.pegScore.size.x, this.pegScore.size.y);
             this.ctx.fillStyle = "black";
-            this.ctx.fillText(this.pegScore.text, this.pegScore.pos.x + 19, this.pegScore.pos.y + 15);
+            this.ctx.fillText(this.pegScore.text, this.pegScore.pos.x + 5, this.pegScore.pos.y + 15);
             this.ctx.fillText(this.env.pegNum, this.pegScore.pos.x + 45, this.pegScore.pos.y + 35);
         }
         // indicate hovered deck (if it's hovered)
@@ -570,13 +570,21 @@ class Gamestate {
         if (this.chosenCard.length > 0) {
             this.ctx.fillStyle = "blue";
             for (let i = 0; i < this.chosenCard.length; i++) {
-                this.ctx.fillRect(this.hand.pos.x + this.chosenCard[i].i * 67 - 1, this.hand.pos.y - 1, s.x + 2, s.y + 2);
+                this.ctx.fillRect(this.hand.pos.x + this.chosenCard[i].i * 67 - 1, this.hand.pos.y - 11, s.x + 2, s.y + 4);
             }
         }
         // indicate hovered card (if it exists)
         if (this.hCard.isH) {
             this.ctx.fillStyle = "orange";
-            this.ctx.fillRect(this.hand.pos.x + this.hCard.i * 67 - 1, this.hand.pos.y - 1, s.x + 2, s.y + 2);
+            let valid = true;
+            for (let c in this.chosenCard) {
+                if (this.hCard.i === this.chosenCard[c].i) {
+                    valid = false;
+                }
+            }
+            if (valid) {
+                this.ctx.fillRect(this.hand.pos.x + this.hCard.i * 67 - 1, this.hand.pos.y - 1, s.x + 2, s.y + 2);
+            }
         }
         // draw your hand 
         let dHand = (this.playerNum < 2) ? this.env.getPlayerHand1() : this.env.getPlayerHand2();
@@ -586,7 +594,11 @@ class Gamestate {
             for (let i = 0; i < l; i++) {
                 cInfo = assets.getCard(dHand[i].rank, dHand[i].suit);
                 let space = (i === 4 && this.gameStage === "count") ? 77 : 67;
-                this.ctx.drawImage(cInfo.img, cInfo.sx, cInfo.sy, cInfo.sW, cInfo.sH, h.pos.x + i * space, h.pos.y, s.x, s.y);
+                let posY = h.pos.y;
+                for (let c in this.chosenCard) {
+                    posY = (this.chosenCard[c].i === i) ? posY - 10 : posY;
+                }
+                this.ctx.drawImage(cInfo.img, cInfo.sx, cInfo.sy, cInfo.sW, cInfo.sH, h.pos.x + i * space, posY, s.x, s.y);
             }
         }
         // draw opponent hand

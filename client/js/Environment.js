@@ -29,8 +29,8 @@ class Environment {
         this.init();
     }
 
+    // initialize actions and deck
     init() {
-        // init actions and deck
         for (let i = 0; i < 5; i++) {
             for (let j = i + 1; j < 6; j++) {
                 this.actions.push({ a: i, b: j });
@@ -49,22 +49,27 @@ class Environment {
         }
     }
 
+    // return actions
     getActions() {
         return this.actions;
     }
 
+    // return deck
     getDeck() {
         return this.deck;
     }
 
+    // return player 1's hand
     getPlayerHand1() {
         return this.playerHand1;
     }
 
+    // return player 2's hand
     getPlayerHand2() {
         return this.playerHand2;
     }
 
+    // return crib had
     getCrib() {
         return this.cribHand;
     }
@@ -93,7 +98,7 @@ class Environment {
         this.playerHand2 = data.p2H;
     }
 
-    // share cut card
+    // send cut card to both clients
     handleCut(cut) {
         this.cutCard = cut;
         // get 2 points for cutting the jack
@@ -140,7 +145,7 @@ class Environment {
         }
     }
 
-    // Fisher-Yates Method
+    // Shuffle the deck using the Fisher-Yates Method
     shuffleDeck() {
         this.deck = [];
         for (let i = 0; i < this.suits; i++) {
@@ -163,6 +168,7 @@ class Environment {
         }
     }
 
+    // non-dealer cut's deck (randomly select 1 card from the deck)
     cutDeck() {
         if (this.p2) {
             this.cutCard = this.deck.splice(Math.floor(Math.random() * this.deck.length), 1)[0];
@@ -179,6 +185,7 @@ class Environment {
         }
     }
 
+    // give each player 6 cards
     dealCards() {
         this.playerHand1 = [];
         this.playerHand2 = [];
@@ -187,8 +194,13 @@ class Environment {
             this.playerHand1.push(this.deck.pop());
             this.playerHand2.push(this.deck.pop());
         }
+        // sort cards by rank from better hand readability
+        this.playerHand1.sort((a, b) => { return a.rank - b.rank });
+        this.playerHand2.sort((a, b) => { return a.rank - b.rank });
+        this.checkScore();
     }
 
+    // count each players cards in order 
     countCards() {
         // set up hands for counting
         this.pegCards = [];
@@ -322,7 +334,7 @@ class Environment {
         }
     }
 
-    // get score for gos
+    // get score for gos (1 point for player who lays last card before reaching 31)
     go(n) {
         let hand = (n > 1) ? this.playerHand2 : this.playerHand1;
         let validGo = true;
@@ -576,6 +588,7 @@ class Environment {
         }
     }
 
+    // share peg results with both players/clients
     handlePegResults(data) {
         this.playerHand1 = data.p1H;
         this.playerHand2 = data.p2H;
@@ -727,6 +740,24 @@ class Environment {
         return (2 * pairs) + (2 * fifteens) + flushes + runPoints + jackson;
     }
 
+    // check if one player missed a card count
+    // happens rarely (possibly due to slow connection)
+    checkScore() {
+        // send your record of each players current score to other player
+        socket.emit('checkScore', {
+            p1Score: this.p1Score,
+            p2Score: this.p2Score
+        });
+    }
+
+    // update players score if other client has a larger score on record (means that player missed a card count)
+    handleCheckScore(scores) {
+        this.p1Score = (scores.p1Score > this.p1Score) ? scores.p1Score : this.p1Score;
+        this.p2Score = (scores.p2Score > this.p2Score) ? scores.p2Score : this.p2Score;
+    }
+
+    // Computer AI Functions:
+
     // remove the right cards 
     greedyDiscard() {
         let hand = this.playerHand2;
@@ -756,6 +787,7 @@ class Environment {
         this.playerHand2.splice(discards[0], 1);
     }
 
+    // randomly discard a card
     randomDiscard() {
         let hand = this.playerHand2;
         let discards = this.actions[Math.floor(Math.random() * this.actions.length)];
@@ -763,6 +795,7 @@ class Environment {
     }
 
 
+    // lay the card that gives the player the most points this turn
     greedyPegging() {
         // check for go 
         let go = true;

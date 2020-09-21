@@ -1,6 +1,6 @@
 // mongoDB
 const MongoClient = require('mongodb').MongoClient;
-const uri = "mongodb+srv://nicholasdelaney:79130Hoe!@nickdb-vlvu9.mongodb.net/NickDB?retryWrites=true&w=majority";
+const uri = "mongodb+srv://nicholasdelaney:" + process.env.DB_PASSWORD + "@nickdb-vlvu9.mongodb.net/NickDB?retryWrites=true&w=majority";
 const dbName = "NickDB";
 // express
 const express = require('express');
@@ -20,7 +20,7 @@ let socketList = [];
 let playerList = [];
 let you = null;
 // on socket connection
-const io = require('socket.io')(http); // (http)
+const io = require('socket.io')(http); 
 io.sockets.on('connection', (socket) => {
     
     socketList.push(socket);
@@ -88,6 +88,13 @@ io.sockets.on('connection', (socket) => {
             msg: data.msg
         });
     });
+    // send records of each players score to other player
+    socket.on('checkScore', (data) => {
+        io.to(data.p1).to(data.p2).emit('handleCheckScore', {
+           p1Score: data.p1Score,
+           p2Score: data.p2Score
+        });
+    })
     // send cards sent to crib to both players
     socket.on('sendToCrib', (data) => {
         io.to(data.p1).to(data.p2).emit('sharedCrib', {

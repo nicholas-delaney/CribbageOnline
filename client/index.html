@@ -20,6 +20,7 @@
     </div>
   </div>
 
+
   <canvas id="lobbyCanvas" width="1000" height="400" style="border:1px solid black; display:none;">
   </canvas>
 
@@ -35,9 +36,9 @@
     </form>
   </div>
 
+
   <script src="/socket.io/socket.io.js"></script>
   <script src='client/js/Environment.js'></script>
-  <script src='client/js/CribRL.js'></script>
   <script src='client/js/Lobby.js'></script>
   <script src='client/js/Gamestate.js'></script>
   <script src='client/js/Assets.js'></script>
@@ -80,7 +81,7 @@
           msg: chatInput.value
         });
       }
-      else {
+      else if (game.player2) {
         socket.emit('gameMsg', {
           p1: game.player1,
           p2: game.player2,
@@ -226,6 +227,9 @@
     });
     socket.on('handleGo', (data) => {
       game.env.handleGo(data);
+    });
+    socket.on('handleCheckScore', (data) => {
+      game.env.handleCheckScore(data);
     });
     socket.on('handleProceed', (data) => {
       if (data.n === 1) {
