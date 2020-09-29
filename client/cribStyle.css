@@ -7,6 +7,22 @@ html {
     overflow-y: hidden;
     
 }
+h3 {
+    padding: 1%;
+    margin: 0;
+}
+.authorInfo {
+    font-family: 'Aldrich';
+    font-weight: bold;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 1%;
+    margin: 5% 60% 5% 10%;
+    background-color: orangered;
+    border: 1px solid black;
+    border-radius: 8px;
+}
 div#signDiv {
     font-family: 'Epilogue';
     font-weight: bold;
@@ -15,7 +31,7 @@ div#signDiv {
     justify-content: center;
     background-color: orangered;
     padding: 1%;
-    margin: 2% 50% 70% 10%;
+    margin: 2% 50% 5% 10%;
     border: 1px solid black;
     border-radius: 8px;
 }
@@ -53,5 +69,13 @@ h1 {
     font-size: 80px;
     text-align: center;
     margin: 4% 45% 0% 0%;
+}
+
+@media screen and (max-width: 897px) {
+    .authorInfo, div#signDiv {
+        margin: 1%;
+        margin-bottom: 5%;
+        padding: 1%;
+    }
 }
 
