@@ -11,7 +11,7 @@ h3 {
     padding: 1%;
     margin: 0;
 }
-.authorInfo {
+div#authorInfo {
     font-family: 'Aldrich';
     font-weight: bold;
     display: flex;
